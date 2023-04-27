@@ -60,12 +60,16 @@ export default class CreateRoomPage extends Component {
     };
     fetch("/api/create-room", requestOptions)
       .then((response) => response.json())
-      .then((data) => console.log(data));
+      .then((data) => this.props.history.push("/room/" + data.code))
+      .catch((error) => {
+        console.error('Error creating room:', error);
+        // You can display an error message to the user here
+      });
   }
 
   render() {
     return (
-      <Grid container spacing={1}>
+      <Grid container spacing={1} class='create-room' style={{padding: '60px'}} >
         <Grid item xs={12} align="center">
           <Typography component="h4" variant="h4">
             Create a Room Page
@@ -111,8 +115,8 @@ export default class CreateRoomPage extends Component {
                 <div align="center">Votes Required to Skip Song</div>
               </FormHelperText>
             </FormControl>
-            <Grid item xs={12}>
-              <Button color="primary" variant="contained" onClick={this.handleRoomButtonPressed}>
+            <Grid item xs={12} style={{padding: '30px'}}>
+              <Button color="primary" variant="contained" onClick={this.handleRoomButtonPressed} >
                 Create a Room
               </Button>
             </Grid>
