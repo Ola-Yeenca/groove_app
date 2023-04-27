@@ -98,3 +98,17 @@ class CreateRoomView(APIView):
                 self.request.seeion['room_code'] = room.code
                 # Return the response
                 return Response(RoomSerializer(room).data, status=status.HTTP_201_CREATED)
+
+
+class UserInRoom(APIView):
+    def get(self, request, format=None):
+        # Check if the session exists
+        if not self.request.session.exists(self.request.session.session_key):
+            # Create a session
+            self.request.session.create()
+
+        # Return the response
+        data = {
+            'code': self.request.session.get('room_code')
+        }
+        return Response(data, status=status.HTTP_200_OK)
