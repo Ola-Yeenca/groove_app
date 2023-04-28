@@ -60,23 +60,25 @@ export default class CreateRoomPage extends Component {
     };
       console.log(requestOptions);
       fetch("/api/create-room", requestOptions)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error('Failed to create room');
-        }
-        return response.json();
-      })
-      .then((data) => {
-        if (!data.code) {
-          throw new Error('Room code not found in response');
-        }
-        this.props.history.push("/room/" + data.code);
-      })
-      .catch((error) => {
-        console.error('Error creating room:', error);
-        // You can display an error message to the user here
-        console.log(error);
-      });
+        .then((response) => {
+          console.log(response);
+          if (!response.ok) {
+            throw new Error('Failed to create room');
+          }
+          return response.json();
+        })
+        .then((data) => {
+          if (!data.code) {
+            throw new Error('Room code not found in response');
+          }
+          this.props.history.push("/room/" + data.code);
+        })
+        .catch((error) => {
+          console.error('Error creating room:', error);
+          // You can display an error message to the user here
+          console.log(error);
+          alert('Error creating room: ' + error);
+        });
   }
 
   render() {
