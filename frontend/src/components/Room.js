@@ -30,7 +30,8 @@ export default class Room extends Component {
     try {
       const response = await fetch('/api/get-room' + '?code=' + this.roomCode);
       if (!response.ok) {
-        throw new Error('Failed to fetch room details');
+        this.props.leaveRoomCallBack();
+        this.props.history.push('/');
       }
       const data = await response.json();
       this.setState({
@@ -50,6 +51,7 @@ export default class Room extends Component {
       headers: { 'Content-Type': 'application/json' },
     };
     fetch('/api/exit-room', requestOptions).then((_response) => {
+      this.props.leaveRoomCallBack();
       this.props.history.push('/');
     });
   }
