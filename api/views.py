@@ -4,6 +4,7 @@ from .models import Room
 from .serializers import RoomSerializer, CreateRoomSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from django.http import JsonResponse
 
 
 # Create your views here.
@@ -64,8 +65,14 @@ class JoinRoom(APIView):
 
 class CreateRoomView(APIView):
     serializer_class = CreateRoomSerializer
+    lookup_url_kwarg = 'roomCode'
+    print(
+        'CreateRoomView called'
+    )
+
 
     def post(self, request, format=None):
+        print('post method called')
         if not self.request.session.exists(self.request.session.session_key):
             # Create a session
             self.request.session.create()
@@ -78,6 +85,7 @@ class CreateRoomView(APIView):
             votes_to_skip = serializer.data.get('votes_to_skip')
             # Get the user from the session
             host = self.request.session.session_key
+            print(f'Host: {host}')
             # Check if the room already exists
             queryset = Room.objects.filter(host=host)
             if queryset.exists():
@@ -95,10 +103,12 @@ class CreateRoomView(APIView):
                 room = Room(host=host, guest_can_pause=guest_can_pause, votes_to_skip=votes_to_skip)
                 # Save the room
                 room.save()
-                self.request.seeion['room_code'] = room.code
+                self.request.session['room_code'] = room.code
                 # Return the response
                 return Response(RoomSerializer(room).data, status=status.HTTP_201_CREATED)
-
+        # Return the response
+        print(f'Serializer errors: {serializer.errors}')
+        return Response({'Bad Request': 'Invalid data...'}, status=status.HTTP_400_BAD_REQUEST)
 
 class UserInRoom(APIView):
     def get(self, request, format=None):
@@ -112,3 +122,23 @@ class UserInRoom(APIView):
             'code': self.request.session.get('room_code')
         }
         return Response(data, status=status.HTTP_200_OK)
+
+
+class ExitRoom(APIView):
+    def post(self, request, format=None):
+        # check if the host wants to leave the room
+        host_id = self.reques.session.session_key
+        room = Room.objects.filter(host=host_id)
+        if len(room) > 0:
+            room = room[0]
+            room.delete()
+        # Check if the session exists
+        if 'room_code' in self.request.session:
+            # Delete the room code from the session
+            self.request.session.pop('room_code')
+            # Get the session key
+            session_key = self.request.session.session_key
+            # Delete the session
+            self.request.session.delete(session_key)
+        # Return the response
+        return Response({'message': 'Success'}, status=status.HTTP_200_OK)
