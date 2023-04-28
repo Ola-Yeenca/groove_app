@@ -1,4 +1,12 @@
 import React, { Component } from "react";
+import { Link } from "react-router-dom";
+import {
+  Typography,
+  Alert,
+  Button,
+  ButtonGroup,
+  Grid,
+} from "@mui/material";
 
 export default class Room extends Component {
   constructor(props) {
@@ -9,6 +17,8 @@ export default class Room extends Component {
       isHost: false,
     };
     this.roomCode = this.props.match.params.roomCode;
+    this.ExitButtonPressed = this.ExitButtonPressed.bind(this);
+    this.getRoomdetails = this.getRoomdetails.bind(this);
   }
 
   componentDidMount() {
@@ -34,15 +44,47 @@ export default class Room extends Component {
   }
 
 
+  ExitButtonPressed() {
+    const requestOptions = {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    };
+    fetch('/api/exit-room', requestOptions).then((_response) => {
+      this.props.history.push('/');
+    });
+  }
+
+
 
   render() {
     return (
-      <div>
-        <h3>{this.roomCode}</h3>
-        <p>Votes: {this.state.votesToSkip}</p>
-        <p>Guest Can Pause: {this.state.guestCanPause.toString()}</p>
-        <p>Host: {this.state.isHost.toString()}</p>
-      </div>
+      <Grid container spacing={2}>
+        <Grid item xs={12} align="center">
+          <Typography variant="h4" component="h4">
+            Code: {this.roomCode}
+          </Typography>
+        </Grid>
+        <Grid item xs={12} align="center">
+          <Typography variant="h6" component="h6">
+            Votes: {this.state.votesToSkip}
+          </Typography>
+        </Grid>
+        <Grid item xs={12} align="center">
+          <Typography variant="h6" component="h6">
+            Guest Can Pause: {this.state.guestCanPause.toString()}
+          </Typography>
+        </Grid>
+        <Grid item xs={12} align="center">
+          <Typography variant="h6" component="h6">
+            Host: {this.state.isHost.toString()}
+          </Typography>
+        </Grid>
+        <Grid item xs={12} align="center">
+          <Button color="secondary" variant="contained" onClick={ this.ExitButtonPressed } style={{ margin: '10px' }}>
+            Exit Room
+          </Button>
+        </Grid>
+      </Grid>
     );
   }
 }
