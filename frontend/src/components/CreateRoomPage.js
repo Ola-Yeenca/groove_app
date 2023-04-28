@@ -58,12 +58,24 @@ export default class CreateRoomPage extends Component {
         guest_can_pause: this.state.guestCanPause,
       }),
     };
-    fetch("/api/create-room", requestOptions)
-      .then((response) => response.json())
-      .then((data) => this.props.history.push("/room/" + data.code))
+      console.log(requestOptions);
+      fetch("/api/create-room", requestOptions)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('Failed to create room');
+        }
+        return response.json();
+      })
+      .then((data) => {
+        if (!data.code) {
+          throw new Error('Room code not found in response');
+        }
+        this.props.history.push("/room/" + data.code);
+      })
       .catch((error) => {
         console.error('Error creating room:', error);
         // You can display an error message to the user here
+        console.log(error);
       });
   }
 
@@ -75,7 +87,7 @@ export default class CreateRoomPage extends Component {
             Create a Room Page
           </Typography>
           <Typography variant="subtitle1">
-            This is a paragraph of text.
+            Live, Laugh, Music...
           </Typography>
         </Grid>
         <Grid item xs={12} align="center">
