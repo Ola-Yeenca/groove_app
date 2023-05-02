@@ -67,49 +67,37 @@ class CreateRoomView(APIView):
     http_method_names = ['post']
     serializer_class = CreateRoomSerializer
     lookup_url_kwarg = 'roomCode'
-    print(
-        'CreateRoomView called'
-    )
-
 
     def post(self, request, format=None):
-        print('post method called')
         if not self.request.session.exists(self.request.session.session_key):
-            # Create a session
             self.request.session.create()
 
         serializer = self.serializer_class(data=request.data)
-        # Check if the data is valid
         if serializer.is_valid():
-            # Get the data from the serializer
             guest_can_pause = serializer.data.get('guest_can_pause')
             votes_to_skip = serializer.data.get('votes_to_skip')
-            # Get the user from the session
             host = self.request.session.session_key
-            print(f'Host: {host}')
-            # Check if the room already exists
-            queryset = Room.objects.filter(host=host)
-            if queryset.exists():
-                # If the room exists, update the room
-                room = queryset[0]
-                room.guest_can_pause = guest_can_pause
-                room.votes_to_skip = votes_to_skip
-                # Save the room
-                room.save(update_fields=['guest_can_pause', 'votes_to_skip'])
-                self.request.session['room_code'] = room.code
-                # Return the response
-                return Response(RoomSerializer(room).data, status=status.HTTP_200_OK)
+            room_code = self.kwargs.get(self.lookup_url_kwarg)
+
+            if room_code:
+                # Retrieve existing room if it exists
+                room = Room.objects.filter(code=room_code).first()
+                if room:
+                    room.guest_can_pause = guest_can_pause
+                    room.votes_to_skip = votes_to_skip
+                    room.save(update_fields=['guest_can_pause', 'votes_to_skip'])
+                else:
+                    return Response({'Error': 'Room not found.'}, status=status.HTTP_404_NOT_FOUND)
             else:
-                # If the room does not exist, create the room
+                # Create a new room
                 room = Room(host=host, guest_can_pause=guest_can_pause, votes_to_skip=votes_to_skip)
-                # Save the room
                 room.save()
-                self.request.session['room_code'] = room.code
-                # Return the response
-                return Response(RoomSerializer(room).data, status=status.HTTP_201_CREATED)
-        # Return the response
-        print(f'Serializer errors: {serializer.errors}')
+
+            self.request.session['room_code'] = room.code
+            return Response(RoomSerializer(room).data, status=status.HTTP_200_OK)
+
         return Response({'Bad Request': 'Invalid data...'}, status=status.HTTP_400_BAD_REQUEST)
+
 
 class UserInRoom(APIView):
     def get(self, request, format=None):
