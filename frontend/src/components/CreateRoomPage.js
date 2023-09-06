@@ -59,45 +59,58 @@ export default class CreateRoomPage extends Component {
   }
 
   handleRoomButtonPressed(roomCode) {
-      console.log(this.state);
+    console.log('Function called');
+    console.log(this.state);
 
-      const csrftoken = getCookie('csrftoken');
+    const csrftoken = getCookie('csrftoken');
 
-      const requestOptions = {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          'X-CSRFToken': csrftoken,
-        },
-        body: JSON.stringify({
-          votes_to_skip: this.state.votesToSkip,
-          guest_can_pause: this.state.guestCanPause,
-        }),
-      };
+    const requestOptions = {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        'X-CSRFToken': csrftoken,
+      },
+      body: JSON.stringify({
+        votes_to_skip: this.state.votesToSkip,
+        guest_can_pause: this.state.guestCanPause,
+      }),
+    };
 
+    console.log('room created!'); // This should display
 
-      console.log(requestOptions);
+    console.log(requestOptions);
 
-      const endpoint = '/api/create-room';
+    const endpoint = '/api/create-room';
 
-      axios.post(endpoint, requestOptions.body, {
-        headers: requestOptions.headers,
+    axios.post(endpoint, requestOptions.body, {
+      headers: requestOptions.headers,
+    })
+      .then((response) => {
+        console.log(response);
+
+        if (!response.data.code) {
+          const errorMessage = "Failed to create room: Room code not found in response";
+          throw new Error(errorMessage);
+        }
+
+        console.log(`roomCode: ${roomCode}`);
+
+        // After successfully creating a room, redirect to the UserInRoom view
+        const roomCode = response.data.code;
+        const userInRoomUrl = `/user-in-room?roomCode=${roomCode}`;
+        window.location.href = userInRoomUrl;
+
+        console.log('room created!'); // This should also display if the request is successful
+
       })
-        .then((response) => {
-          console.log(response);
-          if (!response.data.code) {
-            const errorMessage = "Failed to create room: Room code not found in response";
-            throw new Error(errorMessage);
-          }
-          this.props.history.push("/room/" + response.data.code);
-        })
-        .catch((error) => {
-          console.error('Error creating room:', error);
-          // You can display an error message to the user here
-          console.log(error);
-          alert(error.message); // Display the error message including details
-        });
-    }
+      .catch((error) => {
+        console.error('Error creating room:', error);
+        // You can display an error message to the user here
+        console.log(error);
+        alert(error.message); // Display the error message including details
+      });
+  }
+
 
 
   handleUpdateButtonPressed() {

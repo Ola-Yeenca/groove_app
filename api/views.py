@@ -55,9 +55,10 @@ class JoinRoom(APIView):
 
 @permission_classes([AllowAny])
 class CreateRoomView(APIView):
-    http_method_names = ['get', 'post']
+    http_method_names = ['post']
     serializer_class = CreateRoomSerializer
     lookup_url_kwarg = 'roomCode'
+    
 
     def post(self, request, format=None):
         if not request.session.exists(request.session.session_key):
