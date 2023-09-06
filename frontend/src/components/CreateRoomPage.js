@@ -58,38 +58,47 @@ export default class CreateRoomPage extends Component {
     });
   }
 
-  handleRoomButtonPressed() {
-    console.log(this.state);
-    const requestOptions = {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        votes_to_skip: this.state.votesToSkip,
-        guest_can_pause: this.state.guestCanPause,
-      }),
-    };
+  handleRoomButtonPressed(roomCode) {
+      console.log(this.state);
+
+      const csrftoken = getCookie('csrftoken');
+
+      const requestOptions = {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          'X-CSRFToken': csrftoken,
+        },
+        body: JSON.stringify({
+          votes_to_skip: this.state.votesToSkip,
+          guest_can_pause: this.state.guestCanPause,
+        }),
+      };
+
+
       console.log(requestOptions);
-      fetch("/api/create-room", requestOptions)
+
+      const endpoint = '/api/create-room';
+
+      axios.post(endpoint, requestOptions.body, {
+        headers: requestOptions.headers,
+      })
         .then((response) => {
           console.log(response);
-          if (!response.ok) {
-            throw new Error('Failed to create room');
+          if (!response.data.code) {
+            const errorMessage = "Failed to create room: Room code not found in response";
+            throw new Error(errorMessage);
           }
-          return response.json();
-        })
-        .then((data) => {
-          if (!data.code) {
-            throw new Error('Room code not found in response');
-          }
-          this.props.history.push("/room/" + data.code);
+          this.props.history.push("/room/" + response.data.code);
         })
         .catch((error) => {
           console.error('Error creating room:', error);
           // You can display an error message to the user here
           console.log(error);
-          alert('Error creating room: ' + error);
+          alert(error.message); // Display the error message including details
         });
-  }
+    }
+
 
   handleUpdateButtonPressed() {
     console.log(this.state);
@@ -103,7 +112,7 @@ export default class CreateRoomPage extends Component {
       }),
     };
       console.log(requestOptions);
-      fetch("/api/update-room", requestOptions).then((response) => {
+      fetch(`/api/update-room/${roomCode}`, requestOptions).then((response) => {
         if (response.ok) {
           this.setState({
             successMsg: "Room updated successfully!",
